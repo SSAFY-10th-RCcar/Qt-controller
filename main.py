@@ -70,7 +70,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
         if new != self.wasd:
             self.wasd = new
             self.pushQuery()
-            print(self.wasd)
+            # print(self.wasd)
 
     def on_release(self, key):
         if key == pynput.keyboard.KeyCode.from_char('w'):
@@ -87,23 +87,19 @@ class MyApp(QMainWindow, Ui_MainWindow):
             self.ui.btn_d.setStyleSheet("background-color: gray")
 
         self.pushQuery()
-        print(self.wasd)
+        # print(self.wasd)
 
     def pushQuery(self):
-        query = "update wasd set w = %s, a = %s, s = %s, d = %s, time = %s, is_finish = 0 where id = 1"
-        value = (self.wasd[0], self.wasd[1], self.wasd[2], self.wasd[3], QDateTime().currentDateTime().toPython())
+        query = "update wasd set w = %s, a = %s, s = %s, d = %s where id = 1"
+        value = (self.wasd[0], self.wasd[1], self.wasd[2], self.wasd[3])
         self.query_que.append((query, value))
-        print("pushed query")
 
     def executeQuery(self):
         # execute one query
         if len(self.query_que) > 0:
             query, value = self.query_que.pop(0)
-            print(query)
-            print(value)
             self.cur.execute(query, value)
             self.db.commit()
-            print("executQuery")
 
 
     def start(self):
