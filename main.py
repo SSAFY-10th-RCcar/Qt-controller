@@ -3,7 +3,6 @@ from PySide6.QtCore import *
 from mainUI import Ui_MainWindow
 from pynput import keyboard
 from dotenv import load_dotenv
-from time import sleep
 import pynput.keyboard
 import mysql.connector
 import os
@@ -14,7 +13,7 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_SCHEMA = os.getenv("DB_SCHEMA")
 AUTH_PLUGIN= os.getenv("AUTH_PLUGIN")
-DELAY = 10 #ms
+DELAY = 100 #ms
 
 
 class MyApp(QMainWindow, Ui_MainWindow):
@@ -33,7 +32,6 @@ class MyApp(QMainWindow, Ui_MainWindow):
         self.wasd = [0,0,0,0]
         self.key_listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
         self.key_listener.start()
-        self.arrow_cnt = 0
 
         self.ui.btn_w.setStyleSheet("background-color: gray")
         self.ui.btn_a.setStyleSheet("background-color: gray")
@@ -48,57 +46,52 @@ class MyApp(QMainWindow, Ui_MainWindow):
 
         #timer setting
         self.timer = QTimer()
-        self.timer.setInterval(DELAY)
+        self.timer.setInterval(DELAY) #500ms
         self.timer.timeout.connect(self.executeQuery)
         self.timer.start()
 
 
     def on_press(self, key):
-        # if self.arrow_cnt >= 2:
-        #     return
         new = self.wasd.copy()
 
         if key == pynput.keyboard.KeyCode.from_char('w'):
             new[0] = 1
             self.ui.btn_w.setStyleSheet("background-color: green")
-        elif key == pynput.keyboard.KeyCode.from_char('a'):
+        if key == pynput.keyboard.KeyCode.from_char('a'):
             new[1] = 1
             self.ui.btn_a.setStyleSheet("background-color: green")
-        elif key == pynput.keyboard.KeyCode.from_char('s'):
+        if key == pynput.keyboard.KeyCode.from_char('s'):
             new[2] = 1
             self.ui.btn_s.setStyleSheet("background-color: green")
-        elif key == pynput.keyboard.KeyCode.from_char('d'):
+        if key == pynput.keyboard.KeyCode.from_char('d'):
             new[3] = 1
             self.ui.btn_d.setStyleSheet("background-color: green")
 
-        # if new != self.wasd:
-        self.wasd = new
-        # self.pushQuery()
-        print(self.wasd)
-        sleep(0.1)
+        if new != self.wasd:
+            self.wasd = new
+            self.pushQuery()
+            print(self.wasd)
 
     def on_release(self, key):
-
         if key == pynput.keyboard.KeyCode.from_char('w'):
             self.wasd[0] = 0
             self.ui.btn_w.setStyleSheet("background-color: gray")
-        elif key == pynput.keyboard.KeyCode.from_char('a'):
+        if key == pynput.keyboard.KeyCode.from_char('a'):
             self.wasd[1] = 0
             self.ui.btn_a.setStyleSheet("background-color: gray")
-        elif key == pynput.keyboard.KeyCode.from_char('s'):
+        if key == pynput.keyboard.KeyCode.from_char('s'):
             self.wasd[2] = 0
             self.ui.btn_s.setStyleSheet("background-color: gray")
-        elif key == pynput.keyboard.KeyCode.from_char('d'):
+        if key == pynput.keyboard.KeyCode.from_char('d'):
             self.wasd[3] = 0
             self.ui.btn_d.setStyleSheet("background-color: gray")
 
-        # self.pushQuery()
+        self.pushQuery()
         print(self.wasd)
-        sleep(0.1)
 
     def pushQuery(self):
-        query = "insert into wasd(w, a, s, d, time, is_finish) values (%s, %s, %s, %s, %s, %s)"
-        value = (self.wasd[0], self.wasd[1], self.wasd[2], self.wasd[3], QDateTime().currentDateTime().toPython(), 0)
+        query = "update wasd set w = %s, a = %s, s = %s, d = %s, time = %s, is_finish = 0 where id = 1"
+        value = (self.wasd[0], self.wasd[1], self.wasd[2], self.wasd[3], QDateTime().currentDateTime().toPython())
         self.query_que.append((query, value))
         print("pushed query")
 
@@ -106,9 +99,11 @@ class MyApp(QMainWindow, Ui_MainWindow):
         # execute one query
         if len(self.query_que) > 0:
             query, value = self.query_que.pop(0)
+            print(query)
+            print(value)
             self.cur.execute(query, value)
             self.db.commit()
-            print("executeQuery")
+            print("executQuery")
 
 
     def start(self):
