@@ -70,7 +70,6 @@ class MyApp(QMainWindow, Ui_MainWindow):
         if new != self.wasd:
             self.wasd = new
             self.pushQuery()
-            # print(self.wasd)
 
     def on_release(self, key):
         if key == pynput.keyboard.KeyCode.from_char('w'):
@@ -87,7 +86,6 @@ class MyApp(QMainWindow, Ui_MainWindow):
             self.ui.btn_d.setStyleSheet("background-color: gray")
 
         self.pushQuery()
-        # print(self.wasd)
 
     def pushQuery(self):
         query = "update wasd set w = %s, a = %s, s = %s, d = %s where id = 1"
@@ -107,7 +105,6 @@ class MyApp(QMainWindow, Ui_MainWindow):
 
 
     def pollingQuery(self):
-        print("polling query")
         self.cur.execute("select * from command order by time desc limit 7")
         self.ui.logText.clear()
         self.log.clear()
