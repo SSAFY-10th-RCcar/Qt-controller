@@ -58,7 +58,7 @@ class Ui_MainWindow(object):
         self.btn_backward.setGeometry(QRect(560, 470, 71, 71))
         self.sensingText = QLabel(self.centralwidget)
         self.sensingText.setObjectName(u"sensingText")
-        self.sensingText.setGeometry(QRect(70, 30, 651, 241))
+        self.sensingText.setGeometry(QRect(70, 30, 651, 271))
         self.sensingText.setFrameShape(QFrame.Panel)
         self.sensingText.setAlignment(Qt.AlignHCenter|Qt.AlignTop)
         self.btn_stop = QPushButton(self.centralwidget)
