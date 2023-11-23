@@ -18,7 +18,6 @@ SENSING_DELAY = 1000  # ms
 SENSING_LOG_MAX = 15
 QUERY_DELAY = 10  # ms
 
-
 class MyApp(QMainWindow, Ui_MainWindow):
     def __init__(self):
         super().__init__()
@@ -31,13 +30,12 @@ class MyApp(QMainWindow, Ui_MainWindow):
                                           auth_plugin=AUTH_PLUGIN)
         self.cur = self.db.cursor()
         self.ui.sensingText.clear()
-        # self.ui.logText.clear()
         self.current_pressed = set()
         self.wasd = [0, 0, 0, 0]
         self.key_listener = keyboard.Listener(on_press=self.on_press, on_release=self.on_release)
         self.key_listener.start()
 
-        self.query_que = []
+        self.query_que = list(set())
 
         self.ui.btn_w.setCheckable(True)
         self.ui.btn_a.setCheckable(True)
@@ -92,11 +90,7 @@ class MyApp(QMainWindow, Ui_MainWindow):
 
         if new != self.wasd:
             self.wasd = new
-            query = "update wasd set w = %s, a = %s, s = %s, d = %s, is_finish = 0 where id = 1"
-            value = (self.wasd[0], self.wasd[1], self.wasd[2], self.wasd[3])
-            # self.cur.execute((query, value))
-            self.query_que.append(((query, value)))
-            print("Executed query: " + query + " with value: " + str(value))
+            self.pushQuery()
 
     def on_release(self, key):
         if key == pynput.keyboard.KeyCode.from_char('w'):
@@ -111,17 +105,12 @@ class MyApp(QMainWindow, Ui_MainWindow):
         if key == pynput.keyboard.KeyCode.from_char('d'):
             self.wasd[3] = 0
             self.ui.btn_d.setChecked(False)
+        self.pushQuery()
 
+    def pushQuery(self):
         query = "update wasd set w = %s, a = %s, s = %s, d = %s, is_finish = 0 where id = 1"
         value = (self.wasd[0], self.wasd[1], self.wasd[2], self.wasd[3])
-        # self.cur.execute((query, value))
         self.query_que.append(((query, value)))
-        print("Executed query: " + query + " with value: " + str(value))
-
-    # def pushQuery(self):
-    #     query = "update wasd set w = %s, a = %s, s = %s, d = %s where id = 1"
-    #     value = (self.wasd[0], self.wasd[1], self.wasd[2], self.wasd[3])
-    #     self.query_que.append(((query, value)))
 
     def executeQuery(self):
         # execute one query
@@ -129,12 +118,10 @@ class MyApp(QMainWindow, Ui_MainWindow):
             query, value = self.query_que.pop(0)
             self.cur.execute(query, value)
             self.db.commit()
-
-    # def start(self):
-    #     self.timer.start()
+            # print("Executed query: " + query + " with value: " + str(value))
 
     def pollingQuery(self):
-        self.cur.execute("select time, pressure, temp, humid, velo from sensing order by time desc limit 1")
+        self.cur.execute("select time, pressure, temp, humid, velo from sensing where id = 1")
         for (time, pressure, temp, humid, velo) in self.cur:
             str = "%s:  기압: %4s  |  온도: %4s  |  습도: %4s  |  속도: %4s" % (
             time.strftime("%Y-%m-%d %H:%M:%S"), pressure, temp, humid, velo)
@@ -144,7 +131,6 @@ class MyApp(QMainWindow, Ui_MainWindow):
                 self.sensingDataNum -= 1
             self.ui.sensingText.setText('\n'.join(self.sensing))
         self.sensingDataNum += 1
-        str = ""
         if self.sensingDataNum >= SENSING_LOG_MAX:
             str = "records: 15(max)"
         else:
@@ -156,65 +142,33 @@ class MyApp(QMainWindow, Ui_MainWindow):
         self.cur.close()
         self.db.close()
 
-    # def insertCommand(self, cmd_string, arg_string):
-    #     time = QDateTime().currentDateTime().toPython()
-    #     is_finish = 0
-    #
-    #     query = "insert into command(time, cmd_string, arg_string, is_finish) values (%s, %s, %s, %s)"
-    #     value = (time, cmd_string, arg_string, is_finish)
-    #
-    #     self.cur.execute((query, value))
-    #     self.db.commit()
-
     def forward(self):
-        query = "update wasd set w = %s, a = %s, s = %s, d = %s, is_finish = 0 where id = 1"
-        value = (1, 0, 0, 0)
-        # self.cur.execute((query, value))
-        self.query_que.append((query, value))
-        print("Executed query: " + query + " with value: " + str(value))
+        self.wasd = [1, 0, 0, 0]
+        self.pushQuery()
 
     def stop(self):
-        query = "update wasd set w = %s, a = %s, s = %s, d = %s, is_finish = 0 where id = 1"
-        value = (0, 0, 0, 0)
-        # self.cur.execute((query, value))
-        self.query_que.append((query, value))
-        print("Executed query: " + query + " with value: " + str(value))
+        self.wasd = [0, 0, 0, 0]
+        self.pushQuery()
 
     def backward(self):
-        query = "update wasd set w = %s, a = %s, s = %s, d = %s, is_finish = 0 where id = 1"
-        value = (0, 0, 1, 0)
-        # self.cur.execute((query, value))
-        self.query_que.append((query, value))
-        print("Executed query: " + query + " with value: " + str(value))
+        self.wasd = [0, 0, 1, 0]
+        self.pushQuery()
 
     def leftforward(self):
-        query = "update wasd set w = %s, a = %s, s = %s, d = %s, is_finish = 0 where id = 1"
-        value = (1, 1, 0, 0)
-        # self.cur.execute((query, value))
-        self.query_que.append((query, value))
-        print("Executed query: " + query + " with value: " + str(value))
+        self.wasd = [1, 1, 0, 0]
+        self.pushQuery()
 
     def rightforward(self):
-        query = "update wasd set w = %s, a = %s, s = %s, d = %s, is_finish = 0 where id = 1"
-        value = (1, 0, 0, 1)
-        # self.cur.execute((query, value))
-        self.query_que.append((query, value))
-        print("Executed query: " + query + " with value: " + str(value))
+        self.wasd = [1, 0, 0, 1]
+        self.pushQuery()
 
     def leftbackward(self):
-        query = "update wasd set w = %s, a = %s, s = %s, d = %s, is_finish = 0 where id = 1"
-        value = (0, 1, 1, 0)
-        # self.cur.execute((query, value))
-        self.query_que.append((query, value))
-        print("Executed query: " + query + " with value: " + str(value))
+        self.wasd = [0, 1, 1, 0]
+        self.pushQuery()
 
     def rightbackward(self):
-        query = "update wasd set w = %s, a = %s, s = %s, d = %s, is_finish = 0 where id = 1"
-        value = (0, 0, 1, 1)
-        # self.cur.execute((query, value))
-        self.query_que.append((query, value))
-        print("Executed query: " + query + " with value: " + str(value))
-
+        self.wasd = [0, 0, 1, 1]
+        self.pushQuery()
 
 app = QApplication()
 win = MyApp()
