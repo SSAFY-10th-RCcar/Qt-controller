@@ -1,5 +1,5 @@
 mysql-connector==2.2.9
-mysql-connector-python==8.2.0
+mysql-connector-python==9.1.0
 protobuf==4.21.12
 pynput==1.7.6
 pyobjc-core==10.0
